@@ -154,6 +154,10 @@ const remove_song = (message, server_queue, args) => {
     if(trackToRemove > server_queue.songs.length || trackToRemove < 0){
         return message.channel.send('Number entered is not a valid queue position.');
     }
+    if(trackToRemove == 1){
+        skip_song(message, server_queue);
+        return;
+    }
     message.channel.send(`**${server_queue.songs[trackToRemove - 1].title}** removed from the queue`);
     server_queue.songs.splice(trackToRemove - 1, 1);
 }
