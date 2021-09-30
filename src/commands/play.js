@@ -115,6 +115,9 @@ const pause_song = (message, server_queue) =>{
 }
 
 const list_queue = (message, server_queue) => {
+    if(!server_queue.songs){
+        return message.channel.send('Queue is currently empty');
+    }
     let songTitles = '';
     for(song of server_queue.songs){
         songTitles += `**${song.title}**\n`;
