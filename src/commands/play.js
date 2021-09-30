@@ -4,11 +4,12 @@ const queue = new Map();    //Queue map
 
 module.exports = {
     name: 'play',   //Main command
-    aliases: ['skip', 'stop', 'pause', 'resume', 'queue'],  //Aliases for secondary commands
+    aliases: ['skip', 'stop', 'pause', 'resume', 'queue', 'remove'],  //Aliases for secondary commands
     cooldown: 0,
     description:['**!play** is used to play the audio of a youtube video in a voice chat, links or keywords can be used to find the video',
     '**!skip** is used to skip to the next song in the queue', '**!stop** is used to empty the queue and stop the current song',
-    '**!pause** can be used to pause and resume audio playback.','**!resume** is used to resume audio playback', '**!queue** returns the current queue'],
+    '**!pause** can be used to pause and resume audio playback.','**!resume** is used to resume audio playback', '**!queue** returns the current queue',
+    '**!remove X** removes a specified song from the queue based on its current position in the queue (e.g. X = 1, 2, 3 etc)'],
     async execute(message, args, cmd, client, Discord){
         const voice_channel = message.member.voice.channel;
         if(!voice_channel)
@@ -80,6 +81,7 @@ module.exports = {
         else if(cmd === 'pause') pause_song(message, server_queue);
         else if(cmd === 'resume') resume_song(message, server_queue);
         else if(cmd === 'queue') list_queue(message, server_queue);
+        else if(cmd === 'remove') remove_song(message, server_queue, args);
     }
 }
 
@@ -119,8 +121,10 @@ const list_queue = (message, server_queue) => {
         return message.channel.send('Queue is currently empty');
     }
     let songTitles = '';
+    let counter = 1;
     for(song of server_queue.songs){
-        songTitles += `**${song.title}**\n`;
+        songTitles += `${counter}: **${song.title}**\n`;
+        counter += 1;
     }
     let queueMsg = `Songs currently in queue:\n${songTitles}`;
     message.channel.send(queueMsg);
@@ -137,6 +141,21 @@ const resume_song = (message, server_queue) =>{
         server_queue.connection.dispatcher.resume();
         message.channel.send(`Song resumed`);
     }
+}
+
+const remove_song = (message, server_queue, args) => {
+    if(!server_queue){
+        return message.channel.send('Queue is currently empty');
+    }
+    const trackToRemove = parseInt(args[0]);
+    if(isNaN(trackToRemove)){
+        return message.channel.send('Please enter the queue position of the song (e.g. 1, 2, 3 etc)');
+    }
+    if(trackToRemove > server_queue.songs.length || trackToRemove < 0){
+        return message.channel.send('Number entered is not a valid queue position.');
+    }
+    message.channel.send(`**${server_queue.songs[trackToRemove - 1].title}** removed from the queue`);
+    server_queue.songs.splice(trackToRemove - 1, 1);
 }
 
 const video_player = async(guild,song)=>{
