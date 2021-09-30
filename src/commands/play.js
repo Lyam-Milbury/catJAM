@@ -4,11 +4,11 @@ const queue = new Map();    //Queue map
 
 module.exports = {
     name: 'play',   //Main command
-    aliases: ['skip', 'stop', 'pause', 'resume'],  //Aliases for secondary commands
+    aliases: ['skip', 'stop', 'pause', 'resume', 'queue'],  //Aliases for secondary commands
     cooldown: 0,
     description:['**!play** is used to play the audio of a youtube video in a voice chat, links or keywords can be used to find the video',
     '**!skip** is used to skip to the next song in the queue', '**!stop** is used to empty the queue and stop the current song',
-    '**!pause** can be used to pause and resume audio playback.','**!resume** is used to resume audio playback'],
+    '**!pause** can be used to pause and resume audio playback.','**!resume** is used to resume audio playback', '**!queue** returns the current queue'],
     async execute(message, args, cmd, client, Discord){
         const voice_channel = message.member.voice.channel;
         if(!voice_channel)
@@ -79,6 +79,7 @@ module.exports = {
         else if(cmd === 'stop') stop_song(message, server_queue);
         else if(cmd === 'pause') pause_song(message, server_queue);
         else if(cmd === 'resume') resume_song(message, server_queue);
+        else if(cmd === 'queue') list_queue(message, server_queue);
     }
 }
 
@@ -111,6 +112,15 @@ const pause_song = (message, server_queue) =>{
         server_queue.connection.dispatcher.pause();
         message.channel.send(`Song paused`);
     }
+}
+
+const list_queue = (message, server_queue) => {
+    let songTitles = '';
+    for(song of server_queue.songs){
+        songTitles += `**${song.title}**\n`;
+    }
+    let message = `Songs currently in queue:\n${songTitles}`;
+    message.channel.send(message);
 }
 
 const resume_song = (message, server_queue) =>{
