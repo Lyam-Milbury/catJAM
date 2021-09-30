@@ -119,8 +119,8 @@ const list_queue = (message, server_queue) => {
     for(song of server_queue.songs){
         songTitles += `**${song.title}**\n`;
     }
-    let message = `Songs currently in queue:\n${songTitles}`;
-    message.channel.send(message);
+    let queueMsg = `Songs currently in queue:\n${songTitles}`;
+    message.channel.send(queueMsg);
 }
 
 const resume_song = (message, server_queue) =>{
