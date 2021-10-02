@@ -13,5 +13,5 @@ client.events = new Discord.Collection();
     require(`./handlers/${handler}`)(client, Discord);
 })
 
-//Keep client login at the end of the script
+//Client login using an environment variable for the api key
 client.login(process.env.DISCORD_APIKEY);

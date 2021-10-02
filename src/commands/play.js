@@ -44,7 +44,7 @@ module.exports = {
                 if(video){  //Used for ytSearch
                     song = { title: video.title, url: video.url}
                 }   else{
-                    message.channel.send('Error finding video.');
+                    return message.channel.send('Error finding video.');
                 }
             }
 
