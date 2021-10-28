@@ -168,7 +168,7 @@ const video_player = async(guild,song)=>{
         server_queue.connection.dispatcher.end();
         song_queue.voice_channel.leave();
         queue.delete(guild.id);
-        return message.channel.send('No more songs in queue 👋');;
+        return message.channel.send('No more songs in queue 👋');
     }
     const stream = ytdl(song.url, {filter: 'audioonly', quality: 140});
     song_queue.connection.play(stream, {seek:0, volume: 0.5}).on('finish', () => {
