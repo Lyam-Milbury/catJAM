@@ -165,7 +165,6 @@ const remove_song = (message, server_queue, args) => {
 const video_player = async(guild,song)=>{
     const song_queue = queue.get(guild.id);
     if(!song){
-        server_queue.connection.dispatcher.end();
         song_queue.voice_channel.leave();
         queue.delete(guild.id);
         return message.channel.send('No more songs in queue 👋');
