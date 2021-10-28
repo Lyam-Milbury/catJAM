@@ -4,9 +4,9 @@ const queue = new Map();    //Queue map
 
 module.exports = {
     name: 'play',   //Main command
-    aliases: ['skip', 'stop', 'pause', 'resume', 'queue', 'remove'],  //Aliases for secondary commands
+    aliases: ['p', 'skip', 'stop', 'pause', 'resume', 'queue', 'remove'],  //Aliases for secondary commands
     cooldown: 0,
-    description:['**!play** is used to play the audio of a youtube video in a voice chat, links or keywords can be used to find the video',
+    description:['**!play/!p** is used to play the audio of a youtube video in a voice chat, links or keywords can be used to find the video',
     '**!skip** is used to skip to the next song in the queue', '**!stop** is used to empty the queue and stop the current song',
     '**!pause** can be used to pause and resume audio playback.','**!resume** is used to resume audio playback', '**!queue** returns the current queue',
     '**!remove X** removes a specified song from the queue based on its current position in the queue (e.g. X = 1, 2, 3 etc)'],
@@ -23,7 +23,7 @@ module.exports = {
 
         const server_queue = queue.get(message.guild.id);
 
-        if(cmd === 'play'){
+        if(cmd === 'play' || cmd === 'p'){
             if(!args.length)
                 return message.channel.send('What should I play? Add a link or song name');
             let song = {};
@@ -132,7 +132,7 @@ const list_queue = (message, server_queue) => {
 
 const resume_song = (message, server_queue) =>{
     if(!message.member.voice.channel)
-        return message.channel.send('You need to be in a channel to stop a queue');
+        return message.channel.send('You need to be in a channel to resume a queue');
     if(!server_queue)
         return message.channel.send("There aren't any songs in the queue");
     if(!server_queue.connection.dispatcher.paused){
@@ -165,9 +165,10 @@ const remove_song = (message, server_queue, args) => {
 const video_player = async(guild,song)=>{
     const song_queue = queue.get(guild.id);
     if(!song){
+        server_queue.connection.dispatcher.end();
         song_queue.voice_channel.leave();
         queue.delete(guild.id);
-        return;
+        return message.channel.send('No more songs in queue 👋');;
     }
     const stream = ytdl(song.url, {filter: 'audioonly', quality: 140});
     song_queue.connection.play(stream, {seek:0, volume: 0.5}).on('finish', () => {
