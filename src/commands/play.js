@@ -170,11 +170,11 @@ const video_player = async(guild,song, tries = 0)=>{
         return message.channel.send('No more songs in queue 👋');
     }
     const stream = ytdl(song.url, {
-        // requestOptions:{
-        //     headers: {
-        //         cookie: process.env.YOUTUBE_COOKIE,
-        //     },
-        // },
+        requestOptions:{
+            headers: {
+                cookie: process.env.YOUTUBE_COOKIE,
+            },
+        },
         filter: 'audioonly', 
         quality: 140,
     });
