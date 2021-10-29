@@ -162,19 +162,35 @@ const remove_song = (message, server_queue, args) => {
     server_queue.songs.splice(trackToRemove - 1, 1);
 }
 
-const video_player = async(guild,song)=>{
+const video_player = async(guild,song, tries = 0)=>{
     const song_queue = queue.get(guild.id);
     if(!song){
         song_queue.voice_channel.leave();
         queue.delete(guild.id);
         return message.channel.send('No more songs in queue 👋');
     }
-    const stream = ytdl(song.url, {filter: 'audioonly', quality: 140});
-    song_queue.connection.play(stream, {seek:0, volume: 0.5}).on('finish', () => {
+    const stream = ytdl(song.url, {
+        // requestOptions:{
+        //     headers: {
+        //         cookie: process.env.YOUTUBE_COOKIE,
+        //     },
+        // },
+        filter: 'audioonly', 
+        quality: 140,
+    });
+    song_queue.connection.play(stream, {seek:0, volume: 0.5}).on('start', () => {
+        tries = 0;
+    }).on('finish', () => {
         song_queue.songs.shift();
         video_player(guild,song_queue.songs[0]);
     }).on('error', (err)=>{     //Errors here usually happen on websocket interruptions
         console.log(err);
+        if(tries < 5) {
+            setTimeout(() => {
+                message.channel.send(`**There was an error trying to play the song, retrying... (try ${tries + 1}/5)**`);
+                video_player(guild, song_queue.songs[0], tries +1);
+            }, 1000);
+        }
     });
     await song_queue.text_channel.send(`Now jamming to **${song.title}**`);
 }
