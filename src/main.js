@@ -2,7 +2,7 @@
 
 const Discord = require('discord.js');
 const config = require('./Data/config.json');
-const scraper = require('./scraper/scraperMain.js')
+//const scraper = require('./scraper/scraperMain.js')
 
 let intents = new Discord.Intents(32767);     //32767 Provides all intents
 let client = new Discord.Client({ intents: intents, partials:["MESSAGE", "CHANNEL", "REACTION"] });
@@ -17,4 +17,4 @@ client.events = new Discord.Collection();
 //Client login using an environment variable for the api key
 client.login(process.env.DISCORD_APIKEY);
 
-scraper.interval();
+//scraper.interval();
