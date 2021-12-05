@@ -2,7 +2,7 @@
 
 const Discord = require('discord.js');
 const config = require('./Data/config.json');
-const scraper = require('./events/client/scraper/scraperMain.js')
+const scraper = require('./scraper/scraperMain.js')
 
 let intents = new Discord.Intents(32767);     //32767 Provides all intents
 let client = new Discord.Client({ intents: intents, partials:["MESSAGE", "CHANNEL", "REACTION"] });
