@@ -81,8 +81,14 @@ module.exports = {
         else if(cmd === 'resume') resume_song(message, server_queue);
         else if(cmd === 'queue' || cmd === 'q') list_queue(message, server_queue);
         else if(cmd === 'remove' || cmd === 'r') remove_song(message, server_queue, args);
-    }
-}
+    },
+    
+    getQueue: () => {
+        return server_queue;
+    },
+};
+
+
 
 const stop_song = (message, server_queue) =>{
     if(!message.member.voice.channel)
