@@ -4,10 +4,10 @@ const queue = new Map();    //Queue map
 
 module.exports = {
     name: 'play',   //Main command
-    aliases: ['p', 'stop', 'pause', 'resume', 'queue', 'q', 'remove', 'r'],  //Aliases for secondary commands
+    aliases: ['p', 'skip', 's', 'stop', 'pause', 'resume', 'queue', 'q', 'remove', 'r'],  //Aliases for secondary commands
     cooldown: 0,
     description:['**!play/!p** is used to play the audio of a youtube video in a voice chat, links or keywords can be used to find the video',
-    '**!stop** is used to empty the queue and stop the current song',
+    '**!skip/!s** is used to skip to the next song in the queue', '**!stop** is used to empty the queue and stop the current song',
     '**!pause** can be used to pause and resume audio playback.','**!resume** is used to resume audio playback', '**!queue/!q** returns the current queue',
     '**!remove/!r** removes a specified song from the queue based on its current position in the queue (e.g. X = 1, 2, 3 etc)'],
     async execute(message, args, cmd, client, Discord){
@@ -76,19 +76,23 @@ module.exports = {
                 return message.channel.send(`**${song.title}** was added to the queue`);
             }
         }
+        else if(cmd === 'skip' || cmd === 's') skip_song(message, server_queue);
         else if(cmd === 'stop') stop_song(message, server_queue);
         else if(cmd === 'pause') pause_song(message, server_queue);
         else if(cmd === 'resume') resume_song(message, server_queue);
         else if(cmd === 'queue' || cmd === 'q') list_queue(message, server_queue);
         else if(cmd === 'remove' || cmd === 'r') remove_song(message, server_queue, args);
-    },
-    
-    getQueue: () => {
-        return server_queue;
-    },
-};
+    }
+}
 
-
+const skip_song = (message, server_queue) =>{
+    if(!message.member.voice.channel)
+        return message.channel.send('You need to be in a channel to skip a song');
+    if(!server_queue)
+        return message.channel.send("There aren't any songs in the queue");
+    server_queue.connection.dispatcher.end();
+    message.channel.send(`Song Skipped`);
+}
 
 const stop_song = (message, server_queue) =>{
     if(!message.member.voice.channel)
