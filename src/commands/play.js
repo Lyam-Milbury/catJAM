@@ -57,8 +57,7 @@ module.exports = {
         await interaction.reply('Song time');
         player.on(AudioPlayerStatus.Idle, () => {
             //player.play(getNextResource());
-            player.stop();
-            connection.destroy();
+            setTimeout(() => connection.destroy(), 2_000);
         });
 
     },
