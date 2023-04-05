@@ -1,6 +1,7 @@
 const play = require("./play");
 
 module.exports = {
+    
     name: 'help',
     aliases: 'h',
     cooldown: 0,
