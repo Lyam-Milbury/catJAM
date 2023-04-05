@@ -1,20 +1,31 @@
-//Requires Nodejs v14.16.1, @discordjs V12.5.2, @discordjs/opus, opusscript
+//Requires Nodejs v18.15.0, @discordjs V14.9.0, @discordjs/opus, opusscript
 
-const Discord = require('discord.js');
+const { Client, GatewayIntentBits, Events, Collection } = require('discord.js');
 const config = require('./Data/config.json');
 //const scraper = require('./scraper/scraperMain.js')
+//32767 Provides all intents
 
-let intents = new Discord.Intents(32767);     //32767 Provides all intents
-let client = new Discord.Client({ intents: intents, partials:["MESSAGE", "CHANNEL", "REACTION"] });
+let client = new Client({ 
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+    ], 
+});
 
-client.commands = new Discord.Collection();
-client.events = new Discord.Collection();
+client.commands = new Collection();
+client.events = new Collection();
+
+client.once(Events.ClientReady, c => {
+	console.log(`${c.user.tag} is ready to jam`);
+});
+
 
 ['command_handler', 'event_handler'].forEach(handler =>{
-    require(`./handlers/${handler}`)(client, Discord);
-})
+    require(`./handlers/${handler}`)(client);
+});
 
 //Client login using an environment variable for the api key
-client.login(process.env.DISCORD_APIKEY);
+client.login('ODg5NjUwMzM4MzQzMzEzNDY4.YUkVcQ.oa0vlFDjfEWD6CPsGaWvyhYd-mk');
 
-//scraper.interval();
+

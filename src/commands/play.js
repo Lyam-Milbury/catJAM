@@ -1,6 +1,8 @@
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
 const queue = new Map();    //Queue map
+const { createAudioPlayer } = require('@discordjs/voice');
+const { joinVoiceChannel } = require('@discordjs/voice');
 
 module.exports = {
     name: 'play',   //Main command
@@ -11,6 +13,7 @@ module.exports = {
     '**!pause** can be used to pause and resume audio playback.','**!resume** is used to resume audio playback', '**!queue/!q** returns the current queue',
     '**!remove/!r** removes a specified song from the queue based on its current position in the queue (e.g. X = 1, 2, 3 etc)'],
     async execute(message, args, cmd, client, Discord){
+        console.log("Async?");
         const voice_channel = message.member.voice.channel;
         if(!voice_channel)
             return message.channel.send('Please join a voice channel to execute this command!');
@@ -24,6 +27,7 @@ module.exports = {
         const server_queue = queue.get(message.guild.id);
 
         if(cmd === 'play' || cmd === 'p'){
+            console.log("Here?");
             if(!args.length)
                 return message.channel.send('What should I play? Add a link or song name');
             let song = {};
