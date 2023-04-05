@@ -26,6 +26,6 @@ client.once(Events.ClientReady, c => {
 });
 
 //Client login using an environment variable for the api key
-client.login('ODg5NjUwMzM4MzQzMzEzNDY4.YUkVcQ.oa0vlFDjfEWD6CPsGaWvyhYd-mk');
+client.login(process.env.DISCORD_APIKEY);
 
 
