@@ -1,8 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
-const queue = new Map();    //Queue map
-const { createAudioPlayer, joinVoiceChannel, getVoiceConnection, createAudioResource, AudioPlayerStatus  } = require('@discordjs/voice');
+const { createAudioPlayer, joinVoiceChannel, getVoiceConnection, createAudioResource, AudioPlayerStatus, getNextResource } = require('@discordjs/voice');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,57 +11,87 @@ module.exports = {
             option.setName('message').setDescription('Enter the url or song name').setRequired(true).setMaxLength(100)),
             
     async execute(interaction){
-        const userInput = interaction.options.getString('message');
-        const voiceChannel = interaction.member.voice.channelId;
-        //const serverQueue = queue.get(interaction.guildId);
-        
-        if(voiceChannel === undefined){
-            await interaction.reply('Please join a voice channel to jam.');
-        }
-        else{
-            //If the user posts a link, use ytdl 
-            if(ytdl.validateURL(userInput)){
-                const song_info = await ytdl.getInfo(userInput)
-                song = {title: song_info.videoDetails.title, url: song_info.videoDetails.video_url}
-            }   else{
-                    //Else, user posted a string, use string to search for wanted video
-                    const videoFinder = async (query) =>{
-                        const videoResult = await ytSearch(query);
-                        return (videoResult.videos.length > 1) ? videoResult.videos[0]: null;
-                    }
+        try {
+            const userInput = interaction.options.getString('message');
+            const voiceChannel = interaction.member.voice.channelId;
+            //const serverQueue = queue.get(interaction.guildId);
 
-                    const video = await videoFinder(userInput);
+            // queue idea, we attach the queue to each voice connection, since if we play on a different channel in theory we should have a different
+            // voice connection on each, so it would let us have independent queues per channel
+            
+            if(voiceChannel === undefined){
+                await interaction.reply('Please join a voice channel to jam.');
+            }
+            else{
+                //If the user posts a link, use ytdl 
+                if(ytdl.validateURL(userInput)){
+                    const song_info = await ytdl.getInfo(userInput)
+                    song = {title: song_info.videoDetails.title, url: song_info.videoDetails.video_url}
+                }   else{
+                        //Else, user posted a string, use string to search for wanted video
+                        const videoFinder = async (query) =>{
+                            const videoResult = await ytSearch(query);
+                            return (videoResult.videos.length > 1) ? videoResult.videos[0]: null;
+                        }
 
-                    if(video){  //Used for ytSearch
-                        song = { title: video.title, url: video.url}
-                    }   else{
-                        await interaction.reply('Error finding video.');
+                        const video = await videoFinder(userInput);
+
+                        if(video){  //Used for ytSearch
+                            song = { title: video.title, url: video.url}
+                        }   else{
+                            await interaction.reply('Error finding video.');
+                        }
                     }
+                
+                const stream = ytdl(song.url, {
+                    filter: 'audioonly',
+                    quality: 140,
+                });
+                
+                // check if there is an existing player in the channel 
+                const player = (getVoiceConnection(interaction.member.voice.channel.guildId) && getVoiceConnection(interaction.member.voice.channel.guildId).state.subscription.player) ? getVoiceConnection(interaction.member.voice.channel.guildId).state.subscription.player : createAudioPlayer();
+
+                // check if there is an existing connection
+                const connection = getVoiceConnection(interaction.member.voice.channel.guildId) ? getVoiceConnection(interaction.member.voice.channel.guildId) : joinVoiceChannel({
+                    channelId: interaction.member.voice.channelId,
+                    guildId: interaction.guildId,
+                    adapterCreator: interaction.guild.voiceAdapterCreator,
+                });
+                
+                if (player.queue) {
+                    player.queue.push({stream, song});
+                    await interaction.reply(`${song.title} from ${song.url} has been added to the queue`);
                 }
-            
-            const stream = ytdl(song.url, {
-                filter: 'audioonly',
-                quality: 140,
-            });
+                else{
+                    player.queue = [{stream, song}];
+                }
 
-            const player = createAudioPlayer();
-                    
-            const connection = joinVoiceChannel({
-                channelId: interaction.member.voice.channelId,
-                guildId: interaction.guildId,
-                adapterCreator: interaction.guild.voiceAdapterCreator,
-            });
-            
-            const resource = createAudioResource(stream);
-            player.play(resource);
+                if (!connection.state.subscription){
+                    connection.subscribe(player);
+                    const resource = createAudioResource(player.queue[0].stream);
+                    player.play(resource);
+                    interaction.reply(`Now jamming to ${player.queue[0].song.title} from ${song.url}`);
+                    player.queue.shift();
+                }
 
-            connection.subscribe(player);
-            //const subscription = connection.subscribe(audioPlayer);
-            await interaction.reply(`Now jamming to ${song.title} from ${song.url}`);
-            player.on(AudioPlayerStatus.Idle, () => {
-                //player.play(getNextResource());
-                setTimeout(() => connection.destroy(), 2_000);
-            });
+                console.log(player.queue)
+
+                player.on(AudioPlayerStatus.Idle, () => {
+                    if (player.queue.length > 0){
+                        const resource = createAudioResource(player.queue[0].stream);
+                        interaction.followUp(`Now jamming to ${player.queue[0].song.title}`);
+                        player.queue.shift();
+                    }
+                });
+
+            }
+        } catch (err) {
+            console.error(err);
+            const connection = getVoiceConnection(interaction.member.voice.channel.guildId);
+            if(connection){
+                connection.destroy();
+            }
+            await interaction.reply('The cat was murdered by an error...');
         }
-    },
-};
+    } 
+}
