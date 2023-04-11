@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
-const { createAudioPlayer, joinVoiceChannel, getVoiceConnection, createAudioResource, AudioPlayerStatus, getNextResource } = require('@discordjs/voice');
+const { createAudioPlayer, joinVoiceChannel, getVoiceConnection, createAudioResource, AudioPlayerStatus} = require('@discordjs/voice');
+let isListener = false;
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -14,10 +15,6 @@ module.exports = {
         try {
             const userInput = interaction.options.getString('message');
             const voiceChannel = interaction.member.voice.channelId;
-            //const serverQueue = queue.get(interaction.guildId);
-
-            // queue idea, we attach the queue to each voice connection, since if we play on a different channel in theory we should have a different
-            // voice connection on each, so it would let us have independent queues per channel
             
             if(voiceChannel === undefined){
                 await interaction.reply('Please join a voice channel to jam.');
@@ -57,10 +54,10 @@ module.exports = {
                     guildId: interaction.guildId,
                     adapterCreator: interaction.guild.voiceAdapterCreator,
                 });
-                
+
                 if (player.queue) {
                     player.queue.push({stream, song});
-                    await interaction.reply(`${song.title} from ${song.url} has been added to the queue`);
+                    interaction.reply(`${song.title} from ${song.url} has been added to the queue`);
                 }
                 else{
                     player.queue = [{stream, song}];
@@ -68,22 +65,27 @@ module.exports = {
 
                 if (!connection.state.subscription){
                     connection.subscribe(player);
-                    const resource = createAudioResource(player.queue[0].stream);
-                    player.play(resource);
-                    interaction.reply(`Now jamming to ${player.queue[0].song.title} from ${song.url}`);
+                    player.play(createAudioResource(player.queue[0].stream))
+                    interaction.reply(`Now jamming to ${player.queue[0].song.title} from ${player.queue[0].song.url}`);
                     player.queue.shift();
                 }
 
-                console.log(player.queue)
-
-                player.on(AudioPlayerStatus.Idle, () => {
-                    if (player.queue.length > 0){
-                        const resource = createAudioResource(player.queue[0].stream);
-                        interaction.followUp(`Now jamming to ${player.queue[0].song.title}`);
-                        player.queue.shift();
-                    }
-                });
-
+                if(!isListener){
+                    isListener = true;
+                    player.addListener("stateChange", (oldOne, newOne) => {
+                        if (newOne.status == AudioPlayerStatus.Idle) {
+                            if (player.queue.length > 0){
+                                player.play(createAudioResource(player.queue[0].stream));
+                                interaction.channel.send(`Now jamming to ${player.queue[0].song.title}`);
+                                player.queue.shift();
+                            }
+                            else {
+                                connection.destroy();
+                                isListener = false;
+                            }
+                        }
+                    });
+                }
             }
         } catch (err) {
             console.error(err);
@@ -93,5 +95,7 @@ module.exports = {
             }
             await interaction.reply('The cat was murdered by an error...');
         }
-    } 
+    }
+
+    
 }
