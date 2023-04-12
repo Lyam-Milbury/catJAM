@@ -1,20 +1,49 @@
-//Requires Nodejs v14.16.1, @discordjs V12.5.2, @discordjs/opus, opusscript
+//Requires Nodejs v18.15.0, @discordjs V14.9.0, @discordjs/opus, opusscript
+const fs = require('node:fs');
+const path = require('node:path');
+const { Client, GatewayIntentBits, Events, Collection } = require('discord.js');
+const { config, token  } = require('./Data/config.json');
 
-const Discord = require('discord.js');
-const config = require('./Data/config.json');
-//const scraper = require('./scraper/scraperMain.js')
 
-let intents = new Discord.Intents(32767);     //32767 Provides all intents
-let client = new Discord.Client({ intents: intents, partials:["MESSAGE", "CHANNEL", "REACTION"] });
+let client = new Client({ 
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates,
+    ], 
+});
 
-client.commands = new Discord.Collection();
-client.events = new Discord.Collection();
+client.commands = new Collection();
 
-['command_handler', 'event_handler'].forEach(handler =>{
-    require(`./handlers/${handler}`)(client, Discord);
-})
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+	const filePath = path.join(commandsPath, file);
+	const command = require(filePath);
+	// Set a new item in the Collection with the key as the command name and the value as the exported module
+	if ('data' in command && 'execute' in command) {
+		client.commands.set(command.data.name, command);
+	} else {
+		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+	}
+}
+
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
+for (const file of eventFiles) {
+	const filePath = path.join(eventsPath, file);
+	const event = require(filePath);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else {
+		client.on(event.name, (...args) => event.execute(...args));
+	}
+}
 
 //Client login using an environment variable for the api key
-client.login(process.env.DISCORD_APIKEY);
+client.login(token);
 
-//scraper.interval();
+

@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-module.exports = (Discord, client, message) => {
+module.exports = (client) => {
     let config = JSON.parse(fs.readFileSync(path.resolve('\src','\Data','\config.json')));
     const prefix = config.prefix;
     if(!message.content.startsWith(prefix) || message.author.bot) return;
