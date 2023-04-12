@@ -43,6 +43,9 @@ module.exports = {
                 const stream = ytdl(song.url, {
                     filter: 'audioonly',
                     quality: 140,
+                    highWaterMark: 1<<25,
+                    liveBuffer: 1 << 25,
+                    dlChunkSize: 0,
                 })
                 
                 // check if there is an existing player in the channel 
@@ -95,7 +98,5 @@ module.exports = {
             }
             await interaction.reply('The cat was murdered by an error...');
         }
-    }
-
-    
+    }    
 }
