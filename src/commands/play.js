@@ -57,7 +57,7 @@ module.exports = {
 
                 if (player.queue) {
                     player.queue.push({stream, song});
-                    interaction.reply(`${song.title} from ${song.url} has been added to the queue`);
+                    interaction.reply(`**${song.title}** from ${song.url} has been added to the queue`);
                 }
                 else{
                     player.queue = [{stream, song}];
@@ -66,7 +66,7 @@ module.exports = {
                 if (!connection.state.subscription){
                     connection.subscribe(player);
                     player.play(createAudioResource(player.queue[0].stream))
-                    interaction.reply(`Now jamming to ${player.queue[0].song.title} from ${player.queue[0].song.url}`);
+                    interaction.reply(`Now jamming to **${player.queue[0].song.title}** from ${player.queue[0].song.url}`);
                     player.queue.shift();
                 }
 
@@ -76,7 +76,7 @@ module.exports = {
                         if (newOne.status == AudioPlayerStatus.Idle) {
                             if (player.queue.length > 0){
                                 player.play(createAudioResource(player.queue[0].stream));
-                                interaction.channel.send(`Now jamming to ${player.queue[0].song.title}`);
+                                interaction.channel.send(`Now jamming to **${player.queue[0].song.title}**`);
                                 player.queue.shift();
                             }
                             else {
