@@ -43,7 +43,7 @@ module.exports = {
                 const stream = ytdl(song.url, {
                     filter: 'audioonly',
                     quality: 140,
-                });
+                })
                 
                 // check if there is an existing player in the channel 
                 const player = (getVoiceConnection(interaction.member.voice.channel.guildId) && getVoiceConnection(interaction.member.voice.channel.guildId).state.subscription.player) ? getVoiceConnection(interaction.member.voice.channel.guildId).state.subscription.player : createAudioPlayer();
